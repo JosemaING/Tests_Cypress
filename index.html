@@ -11,8 +11,8 @@
     <div id="container">
         <div id="register-login">
             <h2>Registro</h2>
-            <input type="text" id="register-username" placeholder="Nombre de usuario">
-            <input type="password" id="register-password" placeholder="Contraseña">
+            <input type="text" id="register-username" placeholder="Nombre de usuario" required>
+            <input type="password" id="register-password" placeholder="Contraseña" required>
             <button onclick="registerUser()">Registrarse</button>
 
             <h2>Inicio de Sesión</h2>
@@ -113,6 +113,12 @@
         const username = document.getElementById('register-username').value;
         const password = document.getElementById('register-password').value;
 
+        // Verificar si los campos están vacíos
+        if (username === '' || password === '') {
+            alert('Todos los campos son obligatorios.');
+            return;
+        }
+
         // Verificar si el nombre de usuario ya está en uso
         if (users.some(user => user.username === username)) {
             alert('El nombre de usuario ya está en uso.');
@@ -128,6 +134,12 @@
     function loginUser() {
         const username = document.getElementById('login-username').value;
         const password = document.getElementById('login-password').value;
+
+        // Verificar si los campos están vacíos
+        if (username === '' || password === '') {
+            alert('Todos los campos son obligatorios.');
+            return;
+        }
 
         // Buscar el usuario con las credenciales ingresadas
         const user = users.find(user => user.username === username && user.password === password);
