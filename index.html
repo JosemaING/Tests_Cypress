@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Notas</title>
+    <link rel="stylesheet" href="styles.css">
+    <script defer src="script.js"></script>
+</head>
+<body>
+    <div id="container">
+        <div id="register-login">
+            <h2>Registro</h2>
+            <input type="text" id="register-username" placeholder="Nombre de usuario">
+            <input type="password" id="register-password" placeholder="Contraseña">
+            <button onclick="registerUser()">Registrarse</button>
+
+            <h2>Inicio de Sesión</h2>
+            <input type="text" id="login-username" placeholder="Nombre de usuario">
+            <input type="password" id="login-password" placeholder="Contraseña">
+            <button onclick="loginUser()">Iniciar Sesión</button>
+            <p id="login-error" class="error"></p>
+        </div>
+
+        <div id="dashboard" style="display:none;">
+            <h2>Panel de Control</h2>
+            <button onclick="logoutUser()">Cerrar Sesión</button>
+
+            <h3>Crear Nota</h3>
+            <input type="text" id="note-title" placeholder="Título de la Nota">
+            <textarea id="note-content" placeholder="Contenido de la Nota"></textarea>
+            <button onclick="createNote()">Crear Nota</button>
+
+            <h3>Tus Notas</h3>
+            <div id="notes-list"></div>
+        </div>
+    </div>
+</body>
+</html>
+
+<style>
+    body {
+        font-family: 'Roboto', sans-serif;
+        background-color: #fafafa;
+        margin: 0;
+        padding: 20px;
+    }
+    #container {
+        max-width: 600px;
+        margin: auto;
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    input, textarea {
+        display: block;
+        width: 100%;
+        margin-bottom: 15px;
+        padding: 15px;
+        border: none;
+        border-radius: 8px;
+        background: #f5f5f5;
+        transition: background 0.3s ease;
+    }
+    input:focus, textarea:focus {
+        background: #e0e0e0;
+        outline: none;
+    }
+    button {
+        padding: 15px;
+        background-color: #6200ea;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+    button:hover {
+        background-color: #3700b3;
+    }
+    .error {
+        color: #d32f2f;
+        font-size: 0.9em;
+    }
+    .note {
+        background: #f5f5f5;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .note h4 {
+        margin: 0 0 10px;
+    }
+    .note button {
+        margin-right: 10px;
+        background-color: #03a9f4;
+    }
+    .note button:hover {
+        background-color: #0288d1;
+    }
+</style>
+
+<script>
+    // Array para almacenar los usuarios registrados
+    let users = [];
+    // Variable para almacenar el usuario que ha iniciado sesión actualmente
+    let currentUser = null;
+
+    // Función para registrar un nuevo usuario
+    function registerUser() {
+        const username = document.getElementById('register-username').value;
+        const password = document.getElementById('register-password').value;
+
+        // Verificar si el nombre de usuario ya está en uso
+        if (users.some(user => user.username === username)) {
+            alert('El nombre de usuario ya está en uso.');
+            return;
+        }
+
+        // Añadir el nuevo usuario a la lista de usuarios
+        users.push({ username, password, notes: [] });
+        alert('Registro exitoso. Ahora puede iniciar sesión.');
+    }
+
+    // Función para iniciar sesión de un usuario existente
+    function loginUser() {
+        const username = document.getElementById('login-username').value;
+        const password = document.getElementById('login-password').value;
+
+        // Buscar el usuario con las credenciales ingresadas
+        const user = users.find(user => user.username === username && user.password === password);
+
+        if (user) {
+            // Establecer el usuario actual y mostrar el panel de control
+            currentUser = user;
+            document.getElementById('register-login').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            loadNotes(); // Cargar las notas del usuario actual
+        } else {
+            // Mostrar un error si las credenciales son incorrectas
+            document.getElementById('login-error').textContent = 'Credenciales incorrectas.';
+        }
+    }
+
+    // Función para cerrar la sesión del usuario actual
+    function logoutUser() {
+        // Limpiar el usuario actual y mostrar la pantalla de registro/inicio de sesión
+        currentUser = null;
+        document.getElementById('register-login').style.display = 'block';
+        document.getElementById('dashboard').style.display = 'none';
+    }
+
+    // Función para crear una nueva nota
+    function createNote() {
+        if (!currentUser) return; // Asegurarse de que hay un usuario conectado
+
+        const title = document.getElementById('note-title').value;
+        const content = document.getElementById('note-content').value;
+
+        // Añadir la nueva nota a la lista de notas del usuario actual
+        currentUser.notes.push({ title, content });
+        loadNotes(); // Recargar las notas para mostrar la nueva nota
+    }
+
+    // Función para cargar y mostrar todas las notas del usuario actual
+    function loadNotes() {
+        if (!currentUser) return; // Asegurarse de que hay un usuario conectado
+
+        const notesList = document.getElementById('notes-list');
+        notesList.innerHTML = ''; // Limpiar la lista de notas actual
+
+        // Iterar sobre cada nota y crear un elemento HTML para ella
+        currentUser.notes.forEach((note, index) => {
+            const noteDiv = document.createElement('div');
+            noteDiv.classList.add('note');
+            noteDiv.innerHTML = `
+                <h4>${note.title}</h4>
+                <p>${note.content}</p>
+                <button onclick="editNote(${index})">Editar</button>
+                <button onclick="deleteNote(${index})">Eliminar</button>
+            `;
+            notesList.appendChild(noteDiv); // Añadir la nota a la lista de notas
+        });
+    }
+
+    // Función para editar una nota existente
+    function editNote(index) {
+        // Solicitar al usuario un nuevo título y contenido para la nota
+        const newTitle = prompt('Nuevo título:', currentUser.notes[index].title);
+        const newContent = prompt('Nuevo contenido:', currentUser.notes[index].content);
+
+        // Actualizar la nota si el usuario proporcionó nuevos valores
+        if (newTitle !== null && newContent !== null) {
+            currentUser.notes[index].title = newTitle;
+            currentUser.notes[index].content = newContent;
+            loadNotes(); // Recargar las notas para mostrar la nota actualizada
+        }
+    }
+
+    // Función para eliminar una nota existente
+    function deleteNote(index) {
+        // Eliminar la nota de la lista de notas del usuario actual
+        currentUser.notes.splice(index, 1);
+        loadNotes(); // Recargar las notas para actualizar la visualización
+    }
+</script>
